@@ -1,31 +1,53 @@
 package db
 
 import (
-	"context"
-
+	"github.com/labstack/echo"
 	"github.com/s-take/goecho-postgre-sample/schema"
 )
 
+// Repository ...
 type Repository interface {
 	Close()
-	InsertTask(ctx context.Context, task schema.Task) error
-	ListTasks(ctx context.Context, skip uint64, take uint64) ([]schema.Task, error)
+	InsertTask(c echo.Context, task schema.Task) error
+	ListTasks(c echo.Context) ([]schema.Task, error)
+	GetTask(c echo.Context, id string) (schema.Task, error)
+	DeleteTask(c echo.Context, id string) error
+	UpdateTask(c echo.Context, id string, name string) error
 }
 
 var impl Repository
 
+// SetRepository ...
 func SetRepository(repository Repository) {
 	impl = repository
 }
 
+// Close ...
 func Close() {
 	impl.Close()
 }
 
-func InsertTask(ctx context.Context, task schema.Task) error {
-	return impl.InsertTask(ctx, task)
+// InsertTask ...
+func InsertTask(c echo.Context, task schema.Task) error {
+	return impl.InsertTask(c, task)
 }
 
-func ListTasks(ctx context.Context, skip uint64, take uint64) ([]schema.Task, error) {
-	return impl.ListTasks(ctx, skip, take)
+// ListTasks ...
+func ListTasks(c echo.Context) ([]schema.Task, error) {
+	return impl.ListTasks(c)
+}
+
+// GetTask ...
+func GetTask(c echo.Context, id string) (schema.Task, error) {
+	return impl.GetTask(c, id)
+}
+
+// DeleteTask ...
+func DeleteTask(c echo.Context, id string) error {
+	return impl.DeleteTask(c, id)
+}
+
+// UpdateTask ...
+func UpdateTask(c echo.Context, id string, name string) error {
+	return impl.UpdateTask(c, id, name)
 }

@@ -1,17 +1,20 @@
 package db
 
 import (
-	"context"
 	"database/sql"
 
+	"github.com/labstack/echo"
+	// PostgreSQL driver
 	_ "github.com/lib/pq"
 	"github.com/s-take/goecho-postgre-sample/schema"
 )
 
+// PostgresRepository ...
 type PostgresRepository struct {
 	db *sql.DB
 }
 
+// NewPostgres ...
 func NewPostgres(url string) (*PostgresRepository, error) {
 	db, err := sql.Open("postgres", url)
 	if err != nil {
@@ -26,17 +29,20 @@ func NewPostgres(url string) (*PostgresRepository, error) {
 	}, nil
 }
 
+// Close PostgresRepository
 func (r *PostgresRepository) Close() {
 	r.db.Close()
 }
 
-func (r *PostgresRepository) InsertTask(ctx context.Context, task schema.Task) error {
-	_, err := r.db.Exec("INSERT INTO tasks(id, body, created_at) VALUES($1, $2, $3)", task.ID, task.Name, task.CreatedAt)
+// InsertTask PostgresRepository
+func (r *PostgresRepository) InsertTask(c echo.Context, task schema.Task) error {
+	_, err := r.db.Exec("INSERT INTO tasks(id, name, created_at) VALUES($1, $2, $3)", task.ID, task.Name, task.CreatedAt)
 	return err
 }
 
-func (r *PostgresRepository) ListTasks(ctx context.Context, skip uint64, take uint64) ([]schema.Task, error) {
-	rows, err := r.db.Query("SELECT * FROM tasks ORDER BY id DESC OFFSET $1 LIMIT $2", skip, take)
+// ListTasks PostgresRepository
+func (r *PostgresRepository) ListTasks(c echo.Context) ([]schema.Task, error) {
+	rows, err := r.db.Query("SELECT * FROM tasks ORDER BY created_at ")
 	if err != nil {
 		return nil, err
 	}
@@ -55,4 +61,26 @@ func (r *PostgresRepository) ListTasks(ctx context.Context, skip uint64, take ui
 	}
 
 	return tasks, nil
+}
+
+// GetTask PostgresRepository
+func (r *PostgresRepository) GetTask(c echo.Context, id string) (schema.Task, error) {
+	task := schema.Task{}
+	err := r.db.QueryRow("SELECT * FROM tasks WHERE id = $1", id).Scan(&task.ID, &task.Name, &task.CreatedAt)
+	if err != nil {
+		return task, err
+	}
+	return task, nil
+}
+
+// DeleteTask PostgresRepository
+func (r *PostgresRepository) DeleteTask(c echo.Context, id string) error {
+	_, err := r.db.Exec("DELETE FROM tasks where id=$1", id)
+	return err
+}
+
+// UpdateTask PostgresRepository
+func (r *PostgresRepository) UpdateTask(c echo.Context, id string, name string) error {
+	_, err := r.db.Exec("UPDATE tasks SET name = $2 WHERE id = $1", id, name)
+	return err
 }

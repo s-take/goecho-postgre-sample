@@ -14,15 +14,12 @@ import (
 // listTasksHandler is ...
 func listTasksHandler() echo.HandlerFunc {
 	return func(c echo.Context) error {
-		return c.String(http.StatusOK, "List Table")
-	}
-}
-
-// getTaskHandler is ...
-func getTaskHandler() echo.HandlerFunc {
-	return func(c echo.Context) error {
-		taskid := c.Param("taskid")
-		return c.String(http.StatusOK, "Task id is "+taskid)
+		tasks, err := db.ListTasks(c)
+		if err != nil {
+			log.Println(err)
+			return c.String(http.StatusInternalServerError, "Failed to get tasks")
+		}
+		return c.JSON(http.StatusOK, tasks)
 	}
 }
 
@@ -52,6 +49,53 @@ func createTaskHandler() echo.HandlerFunc {
 			log.Println(err)
 			return c.String(http.StatusInternalServerError, "Failed to create task")
 		}
-		return c.JSON(http.StatusOK, "insert ok")
+		return c.JSON(http.StatusCreated, task)
+	}
+}
+
+// getTaskHandler is ...
+func getTaskHandler() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		taskid := c.Param("taskid")
+		task, err := db.GetTask(c, taskid)
+		if err != nil {
+			log.Println(err)
+			return c.String(http.StatusInternalServerError, "Failed to get task")
+		}
+		return c.JSON(http.StatusOK, task)
+	}
+}
+
+// deleteTaskHandler is ...
+func deleteTaskHandler() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		taskid := c.Param("taskid")
+		err := db.DeleteTask(c, taskid)
+		if err != nil {
+			log.Println(err)
+			return c.String(http.StatusInternalServerError, "Failed to delete task")
+		}
+		return c.NoContent(http.StatusNoContent)
+	}
+}
+
+// updateTaskHandler is ...
+func updateTaskHandler() echo.HandlerFunc {
+	type TaskParam struct {
+		Name string `json:"name"`
+	}
+	return func(c echo.Context) error {
+		taskid := c.Param("taskid")
+		param := new(TaskParam)
+		if err := c.Bind(param); err != nil {
+			return err
+		}
+
+		err := db.UpdateTask(c, taskid, param.Name)
+		if err != nil {
+			log.Println(err)
+			return c.String(http.StatusInternalServerError, "Failed to update task")
+		}
+		return c.NoContent(http.StatusOK)
 	}
 }

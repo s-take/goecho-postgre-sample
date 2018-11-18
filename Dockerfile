@@ -4,10 +4,10 @@ WORKDIR /go/src/github.com/s-take/goecho-postgre-sample
 
 COPY Gopkg.lock Gopkg.toml ./
 COPY vendor vendor
+COPY retry retry
 COPY db db
 COPY schema schema
-COPY halder handler
-COPY main.go main.go
+COPY api-service api-service
 
 RUN go install ./...
 
